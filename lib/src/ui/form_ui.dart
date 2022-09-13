@@ -1,8 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
-// import 'dart:io';
 
 class FormUi extends StatefulWidget {
   Map<String, dynamic>? item;
@@ -19,6 +20,7 @@ class _FormUiState extends State<FormUi> {
   final TextEditingController _descripcionController = TextEditingController();
 
   //Foto
+  File? imageFile;
   dynamic _pickImageError;
   late String _statusText = "😎";
 
@@ -28,46 +30,31 @@ class _FormUiState extends State<FormUi> {
     super.initState();
   }
 
-  _labelStatus() {
-    return Text(
-      _statusText,
-      style: const TextStyle(fontSize: 30),
-    );
-  }
+  // _labelStatus() {
+  //   return Text(
+  //     _statusText,
+  //     style: const TextStyle(fontSize: 30),
+  //   );
+  // }
 
   _image() {
     final size = MediaQuery.of(context).size;
     return GestureDetector(
       onTap: () => _takePhoto(),
-      child: SizedBox(
+      child: Container(
         height: size.height * 0.5,
-        child: Image.asset(
-          'assets/images/${widget.item != null ? widget.item!['imagen'] : 'no-image.jpg'}',
-          width: size.width * 0.7,
+        width: size.width,
+        color: Colors.transparent,
+        child: Card(
+          semanticContainer: true,
+          clipBehavior: Clip.antiAliasWithSaveLayer,
+          elevation: 7,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(11.0),
+          ),
+          margin: const EdgeInsets.all(10),
         ),
       ),
-    );
-  }
-
-  _descripcion() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: TextField(
-        controller: _descripcionController,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          labelText: 'Descripcion',
-        ),
-      ),
-    );
-  }
-
-  _button() {
-    return ElevatedButton(
-      onPressed: () {
-        // _createItem();
-      },
-      child: const Text('Guardar'),
     );
   }
 
@@ -94,14 +81,6 @@ class _FormUiState extends State<FormUi> {
             _statusText = "💾";
           });
         });
-        // await GallerySaver.saveImage(pickedFile.path).then((String path) {
-        //   setState(() {
-        //     _statusText = 'image saved!';
-        //   });
-        // });
-        // setState(() {
-        //   _pickImageError = null;
-        // });
       }
     } catch (e) {
       setState(() {
@@ -110,15 +89,47 @@ class _FormUiState extends State<FormUi> {
     }
   }
 
+  _descripcion() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: TextField(
+        controller: _descripcionController,
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: 'Descripcion',
+        ),
+      ),
+    );
+  }
+
+  _button() {
+    final size = MediaQuery.of(context).size;
+    return ElevatedButton(
+      onPressed: () {
+        // _createItem();
+      },
+      child: SizedBox(
+        width: size.width * 0.4,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: const [
+            Icon(Icons.save),
+            Text('GUARDAR'),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Formulario')),
+      appBar: AppBar(
+          title: Text(_statusText, style: const TextStyle(fontSize: 60))),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            _labelStatus(),
             const SizedBox(height: 20),
             _image(),
             const SizedBox(height: 20),
