@@ -53,6 +53,14 @@ class _FormUiState extends State<FormUi> {
             borderRadius: BorderRadius.circular(11.0),
           ),
           margin: const EdgeInsets.all(10),
+          child: Stack(children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/no-image.jpg',
+                fit: BoxFit.fill,
+              ),
+            )
+          ]),
         ),
       ),
     );
