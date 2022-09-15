@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:gallery_saver/gallery_saver.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -23,6 +23,7 @@ class _FormUiState extends State<FormUi> {
   File? imageFile;
   dynamic _pickImageError;
   late String _statusText = "😎";
+  late bool _cargandoImagen = false;
 
   @override
   void initState() {
@@ -30,36 +31,45 @@ class _FormUiState extends State<FormUi> {
     super.initState();
   }
 
-  // _labelStatus() {
-  //   return Text(
-  //     _statusText,
-  //     style: const TextStyle(fontSize: 30),
-  //   );
-  // }
-
   _image() {
     final size = MediaQuery.of(context).size;
     return GestureDetector(
       onTap: () => _takePhoto(),
       child: Container(
-        height: size.height * 0.5,
-        width: size.width,
+        height: size.height * 0.47,
+        width: size.width * 0.9,
         color: Colors.transparent,
         child: Card(
           semanticContainer: true,
           clipBehavior: Clip.antiAliasWithSaveLayer,
           elevation: 7,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(11.0),
+            borderRadius: BorderRadius.circular(20.0),
           ),
           margin: const EdgeInsets.all(10),
           child: Stack(children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/no-image.jpg',
-                fit: BoxFit.fill,
-              ),
-            )
+            _cargandoImagen
+                ? Positioned.fill(
+                    child: Image.asset(
+                      'assets/images/loading.gif',
+                      fit: BoxFit.fill,
+                    ),
+                  )
+                : imageFile == null
+                    ? Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/no-image.jpg',
+                          fit: BoxFit.fill,
+                        ),
+                      )
+                    : Positioned.fill(
+                        child: FlipInX(
+                          child: Image.file(
+                            imageFile!,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      ),
           ]),
         ),
       ),
@@ -69,6 +79,9 @@ class _FormUiState extends State<FormUi> {
   void _takePhoto() async {
     setState(() {
       _statusText = "📸";
+
+      _cargandoImagen = true;
+      imageFile = null;
     });
     try {
       final XFile? pickedFile = await _picker.pickImage(
@@ -82,16 +95,30 @@ class _FormUiState extends State<FormUi> {
       if (pickedFile != null) {
         setState(() {
           _statusText = "📲";
+          _cargandoImagen = false;
+
+          imageFile = File(pickedFile.path);
         });
         print(pickedFile.path);
-        GallerySaver.saveImage(pickedFile.path).then((path) {
-          setState(() {
-            _statusText = "💾";
-          });
+
+        //Save image to gallery
+        // getting a directory path for saving
+
+        // GallerySaver.saveImage(pickedFile.path).then((path) {
+        //   setState(() {
+        //     _statusText = "💾";
+        //   });
+        // });
+      } else {
+        setState(() {
+          _statusText = "😎";
+          _cargandoImagen = false;
         });
       }
     } catch (e) {
       setState(() {
+        _cargandoImagen = false;
+        _statusText = "❌";
         _pickImageError = e;
       });
     }
@@ -99,7 +126,7 @@ class _FormUiState extends State<FormUi> {
 
   _descripcion() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 25),
       child: TextField(
         controller: _descripcionController,
         decoration: const InputDecoration(
@@ -113,17 +140,24 @@ class _FormUiState extends State<FormUi> {
   _button() {
     final size = MediaQuery.of(context).size;
     return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+      ),
       onPressed: () {
         // _createItem();
       },
       child: SizedBox(
-        width: size.width * 0.4,
+        width: size.width * 0.5,
+        height: size.height * 0.08,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: const [
-            Icon(Icons.save),
-            Text('GUARDAR'),
+            Icon(Icons.save, size: 40),
+            Text('GUARDAR', style: TextStyle(fontSize: 20)),
           ],
         ),
       ),
@@ -136,15 +170,17 @@ class _FormUiState extends State<FormUi> {
       appBar: AppBar(
           title: Text(_statusText, style: const TextStyle(fontSize: 60))),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            _image(),
-            const SizedBox(height: 20),
-            _descripcion(),
-            const SizedBox(height: 20),
-            _button(),
-          ],
+        child: Form(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              _image(),
+              const SizedBox(height: 20),
+              _descripcion(),
+              const SizedBox(height: 20),
+              _button(),
+            ],
+          ),
         ),
       ),
     );
