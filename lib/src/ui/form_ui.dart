@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -14,7 +15,7 @@ class FormUi extends StatefulWidget {
 }
 
 class _FormUiState extends State<FormUi> {
-  final _shoppingBox = Hive.box('image_box');
+  final _imageBox = Hive.box('image_box');
 
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _descripcionController = TextEditingController();
@@ -24,6 +25,9 @@ class _FormUiState extends State<FormUi> {
   dynamic _pickImageError;
   late String _statusText = "😎";
   late bool _cargandoImagen = false;
+  late bool _imagenError = false;
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -33,46 +37,59 @@ class _FormUiState extends State<FormUi> {
 
   _image() {
     final size = MediaQuery.of(context).size;
-    return GestureDetector(
-      onTap: () => _takePhoto(),
-      child: Container(
-        height: size.height * 0.47,
-        width: size.width * 0.9,
-        color: Colors.transparent,
-        child: Card(
-          semanticContainer: true,
-          clipBehavior: Clip.antiAliasWithSaveLayer,
-          elevation: 7,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          margin: const EdgeInsets.all(10),
-          child: Stack(children: [
-            _cargandoImagen
-                ? Positioned.fill(
-                    child: Image.asset(
-                      'assets/images/loading.gif',
-                      fit: BoxFit.fill,
-                    ),
-                  )
-                : imageFile == null
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () => _takePhoto(),
+          child: Container(
+            height: size.height * 0.47,
+            width: size.width * 0.9,
+            color: Colors.transparent,
+            child: Card(
+              semanticContainer: true,
+              clipBehavior: Clip.antiAliasWithSaveLayer,
+              elevation: 7,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              margin: const EdgeInsets.all(10),
+              child: Stack(children: [
+                _cargandoImagen
                     ? Positioned.fill(
                         child: Image.asset(
-                          'assets/images/no-image.jpg',
+                          'assets/images/loading.gif',
                           fit: BoxFit.fill,
                         ),
                       )
-                    : Positioned.fill(
-                        child: FlipInX(
-                          child: Image.file(
-                            imageFile!,
-                            fit: BoxFit.fill,
+                    : imageFile == null
+                        ? Positioned.fill(
+                            child: Image.asset(
+                              'assets/images/no-image.jpg',
+                              fit: BoxFit.fill,
+                            ),
+                          )
+                        : Positioned.fill(
+                            child: FlipInX(
+                              child: Image.file(
+                                imageFile!,
+                                fit: BoxFit.fill,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-          ]),
+              ]),
+            ),
+          ),
         ),
-      ),
+        // Text("mensaje: $_imagenError"),
+        _imagenError
+            ? const Text(
+                "Tome una foto",
+                style: TextStyle(color: Colors.red, fontSize: 12),
+              )
+            : Container(
+                height: 0,
+              )
+      ],
     );
   }
 
@@ -102,13 +119,11 @@ class _FormUiState extends State<FormUi> {
         print(pickedFile.path);
 
         //Save image to gallery
-        // getting a directory path for saving
-
-        // GallerySaver.saveImage(pickedFile.path).then((path) {
-        //   setState(() {
-        //     _statusText = "💾";
-        //   });
-        // });
+        GallerySaver.saveImage(imageFile!.path).then((path) {
+          setState(() {
+            _statusText = "💾";
+          });
+        });
       } else {
         setState(() {
           _statusText = "😎";
@@ -124,15 +139,50 @@ class _FormUiState extends State<FormUi> {
     }
   }
 
+  // Create new item
+  Future<void> _createItem(Map<String, dynamic> newItem) async {
+    await _imageBox.add(newItem);
+  }
+
+  // Update a single item
+  Future<void> _updateItem(int itemKey, Map<String, dynamic> item) async {
+    await _imageBox.put(itemKey, item);
+  }
+
+  Future _saveItem() async {
+    // Save new Item
+    if (widget.item == null) {
+      _createItem({
+        "imagen": imageFile!.path,
+        "descripcion": _descripcionController.text.trim()
+      });
+    }
+
+    // update an existing item
+    if (widget.item != null) {
+      print(widget.item);
+      // _updateItem(widget.item!.key, {
+      //   "imagen": imageFile!.path,
+      //   "descripcion": _descripcionController.text.trim()
+      // });
+    }
+  }
+
   _descripcion() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25),
-      child: TextField(
+      child: TextFormField(
         controller: _descripcionController,
         decoration: const InputDecoration(
           border: OutlineInputBorder(),
           labelText: 'Descripcion',
         ),
+        validator: (value) {
+          if (value!.isEmpty) {
+            return 'Descripcion requerida';
+          }
+          return null;
+        },
       ),
     );
   }
@@ -147,7 +197,17 @@ class _FormUiState extends State<FormUi> {
         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
       ),
       onPressed: () {
-        // _createItem();
+        FocusScope.of(context).requestFocus(FocusNode()); // Ocultar Teclado
+
+        if (imageFile == null) {
+          setState(() => _imagenError = true);
+          return;
+        } else {
+          setState(() => _imagenError = false);
+        }
+        if (_formKey.currentState!.validate()) {
+          debugPrint("Formulario valido");
+        }
       },
       child: SizedBox(
         width: size.width * 0.5,
@@ -171,6 +231,7 @@ class _FormUiState extends State<FormUi> {
           title: Text(_statusText, style: const TextStyle(fontSize: 60))),
       body: SingleChildScrollView(
         child: Form(
+          key: _formKey,
           child: Column(
             children: [
               const SizedBox(height: 20),
