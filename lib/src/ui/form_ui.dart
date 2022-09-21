@@ -2,12 +2,11 @@ import 'dart:io';
 
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:gallery_saver/gallery_saver.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 
 class FormUi extends StatefulWidget {
-  Map<String, dynamic>? item;
+  Map<dynamic, dynamic>? item;
   FormUi({Key? key, this.item}) : super(key: key);
 
   @override
@@ -31,7 +30,15 @@ class _FormUiState extends State<FormUi> {
 
   @override
   void initState() {
-    //TODO: implement initState
+    debugPrint("lo que llega: ${widget.item!.isNotEmpty}");
+    if (widget.item!.isNotEmpty) {
+      setState(() {
+        _cargandoImagen = false;
+        imageFile = File(widget.item!['imagen']);
+        _descripcionController.text = widget.item!['descripcion'];
+      });
+      debugPrint("datos seteados");
+    }
     super.initState();
   }
 
@@ -119,11 +126,11 @@ class _FormUiState extends State<FormUi> {
         print(pickedFile.path);
 
         //Save image to gallery
-        GallerySaver.saveImage(imageFile!.path).then((path) {
-          setState(() {
-            _statusText = "💾";
-          });
-        });
+        // GallerySaver.saveImage(imageFile!.path).then((path) {
+        //   setState(() {
+        //     _statusText = "💾";
+        //   });
+        // });
       } else {
         setState(() {
           _statusText = "😎";
@@ -151,21 +158,31 @@ class _FormUiState extends State<FormUi> {
 
   Future _saveItem() async {
     // Save new Item
-    if (widget.item == null) {
+    if (widget.item!.isEmpty) {
       _createItem({
         "imagen": imageFile!.path,
         "descripcion": _descripcionController.text.trim()
       });
+      debugPrint("Item saved");
+      // Display a snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Un elemento fue agregado')));
     }
 
     // update an existing item
-    if (widget.item != null) {
-      print(widget.item);
-      // _updateItem(widget.item!.key, {
-      //   "imagen": imageFile!.path,
-      //   "descripcion": _descripcionController.text.trim()
-      // });
+    if (widget.item!.isNotEmpty) {
+      // print(widget.item!['key']);
+      _updateItem(widget.item!['key'], {
+        "imagen": imageFile!.path,
+        "descripcion": _descripcionController.text.trim()
+      });
+      debugPrint("Item updated");
+      // Display a snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Un elemento fue actualizado')));
     }
+
+    Navigator.pushNamed(context, '/');
   }
 
   _descripcion() {
@@ -207,6 +224,7 @@ class _FormUiState extends State<FormUi> {
         }
         if (_formKey.currentState!.validate()) {
           debugPrint("Formulario valido");
+          _saveItem();
         }
       },
       child: SizedBox(

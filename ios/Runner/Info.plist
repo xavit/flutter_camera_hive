@@ -51,5 +51,9 @@
 	<string>La aplicación requiere usar tu cámara para tomar una foto de la persona y de su documento de identidad ID.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Necesaria para la aplicación por si el usuario toma un video.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartobservatory._tcp</string>
+	</array>
 </dict>
 </plist>

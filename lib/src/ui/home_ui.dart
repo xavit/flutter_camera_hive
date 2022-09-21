@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_camera_hive/src/ui/form_ui.dart';
 import 'package:hive/hive.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -75,14 +78,21 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _showForm(BuildContext context, int? itemKey) {
-    late Map<String, String> itemSelected = {};
+    late Map<dynamic, dynamic> itemSelected = {};
+    // debugPrint(itemKey.toString());
     if (itemKey != null) {
       final existingItem =
           _items.firstWhere((element) => element['key'] == itemKey);
+      itemSelected['key'] = existingItem['key'];
       itemSelected['imagen'] = existingItem['imagen'];
       itemSelected['descripcion'] = existingItem['descripcion'];
     }
-    Navigator.pushNamed(context, 'formulario', arguments: itemSelected);
+
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return FormUi(
+        item: itemSelected,
+      );
+    }));
   }
 
   @override
@@ -99,9 +109,49 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: const Text("Hive Flutter"),
       ),
-      body: const Center(
-        child: Text('Home'),
-      ),
+      body: _items.isEmpty
+          ? const Center(
+              child: Text(
+                'No Data',
+                style: TextStyle(fontSize: 30),
+              ),
+            )
+          : ListView.builder(
+              // the list of items
+              itemCount: _items.length,
+              itemBuilder: (_, index) {
+                final currentItem = _items[index];
+                return Card(
+                  color: Colors.orange.shade100,
+                  margin: const EdgeInsets.all(10),
+                  elevation: 3,
+                  child: SizedBox(
+                    // height: 150,
+                    child: ListTile(
+                        title: Text(currentItem['descripcion']),
+                        // subtitle: Text(currentItem['descripcion'].toString()),
+                        leading: Image.file(
+                          File(currentItem['imagen']),
+                          // height: 250,
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Edit button
+                            IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () =>
+                                    _showForm(context, currentItem['key'])),
+                            // Delete button
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _deleteItem(currentItem['key']),
+                            ),
+                          ],
+                        )),
+                  ),
+                );
+              }),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showForm(context, null),
         child: const Icon(Icons.add),
