@@ -246,7 +246,7 @@ class _FormUiState extends State<FormUi> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text(_statusText, style: const TextStyle(fontSize: 60))),
+          title: Text(_statusText, style: const TextStyle(fontSize: 30))),
       body: SingleChildScrollView(
         child: Form(
           key: _formKey,
