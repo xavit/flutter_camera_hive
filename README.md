@@ -1,16 +1,20 @@
 # flutter_camera_hive
 
-A new Flutter project.
+An HIVE's Example as Local Storage using Camera.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This is a CRUD with HIVE using Camera.
 
 A few resources to get you started if this is your first Flutter project:
 
 - [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
 - [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+<!-- CONTACT -->
+
+## Contact & Creator
+
+Javier Claros - [@xavit](https://twitter.com/xavit) - javiclaros@gmail.com [@Whatsapp](https://wa.me/59170598806)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
